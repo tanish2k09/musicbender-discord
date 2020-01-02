@@ -1,0 +1,12 @@
+{
+	"configs" : [
+		{
+			"key" : "botAllowed",
+			"value" : false
+		},
+		{
+			"key" : "blr",
+			"value" : false
+		}
+	]
+}

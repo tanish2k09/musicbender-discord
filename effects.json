@@ -1,0 +1,24 @@
+{
+	"effects" : [
+		{
+			"id" : "bruh",
+			"url" : "https://www.youtube.com/watch?v=2ZIpFytCSVc"
+		},
+		{
+			"id" : "yeet",
+			"url" : "https://www.youtube.com/watch?v=D8KxdXEBkhw"
+		},
+		{
+			"id" : "hellomf",
+			"url" : "https://www.youtube.com/watch?v=UkdfPlu2xsw"
+		},
+		{
+			"id" : "nice",
+			"url" : "https://www.youtube.com/watch?v=xwjVuvJUTUA"
+		},
+		{
+			"id" : "dabonem",
+			"url" : "https://www.youtube.com/watch?v=k3eA8z7kyos"
+		}
+	]
+}
