@@ -176,7 +176,7 @@ client.on('message', async message => {
 			if (!url)
 				message.channel.send("The effect isn't on record");
 			else
-				message.channel.send(words[1] + ": " + url);
+				message.channel.send(words[1] + ": <" + url + ">");
 			break;
 
 		case "listall":
@@ -210,7 +210,7 @@ async function execute(command, url, message, serverQueue) {
 		return message.channel.send('I need the permissions to join and speak in your voice channel!');
 	}
 
-	//effectsChannel.send(message.content.substr(1, message.content.len) + ` requested by ` + message.author.id);
+	effectsChannel.send(message.content.substr(1, message.content.len) + ` requested by ` + message.author.id);
 
 	if (!serverQueue) {
 		const queueContruct = {
