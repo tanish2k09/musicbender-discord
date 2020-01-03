@@ -1,12 +1,16 @@
 {
 	"configs" : [
 		{
-			"key" : "botAllowed",
-			"value" : false
+			"key" : "iba",
+			"val" : "true"
 		},
 		{
 			"key" : "blr",
-			"value" : false
+			"val" : "false"
+		},
+		{
+			"key" : "reqverb",
+			"val" : "true"
 		}
 	]
 }

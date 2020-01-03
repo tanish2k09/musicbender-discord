@@ -10,15 +10,12 @@ const selfID = ids.selfID;
 const quantumID = ids.quantumID;
 const briID = ids.briID;
 const retracksID = ids.retracksID;
-const devChannelID = ids.devChannelID;
 const bebeID = ids.bebeID;
 const prefix = '?';
 const queue = new Map();
 const client = new Discord.Client();
 
-var isBotAllowed = false;
 var isBreak = false;
-var blacklistRetracks = false;
 var effectsChannel;
 
 function setBreak(freezeStatus) {
@@ -41,7 +38,7 @@ function getWord(words, index, preserveCase = false) {
 }
 
 function isAdmin(userID) {
-	return (userID == quantumID || userID == briID);
+	return (isDev(userID) || userID == briID);
 }
 
 function isDev(userID) {
@@ -52,26 +49,11 @@ function isOperator(userID) {
 	return (isAdmin(userID) || userID == bebeID);
 }
 
-function assignSetting(key, defVal) {
-	setting = settings.get(key);
-
-	if (!setting)
-		return defVal;
-
-	return setting;
-}
-
-function assignSettings(key, defVal) {
-	isBotAllowed = assignSetting("botAllowed", false);
-	blacklistRetracks = assignSetting("blr", false);
-}
-
 client.once('ready', () => {
 	effectsChannel = client.channels.get(ids.effectsChannelID);
 	effects.readEffectsFromFile();
 	effects.cacheAllEffects();
 	settings.readSettingsFromFile();
-	assignSettings();
 	console.log('Ready!');
 });
 
@@ -91,9 +73,16 @@ client.on('message', async message => {
 		return;
 	}
 
+	// Don't respond to messages authored by the bot itself
+	if (message.author.id == selfID)
+		return;
+
 	// Bots aren't allowed to execute commands (by default)
 	// Only admins should be able to modify bot allowance
 	if (message.author.bot && !isBotAllowed)
+		return;
+
+	if (message.author.id == retracksID && blr)
 		return;
 
 	// Only respond to the prefix with content
@@ -120,22 +109,22 @@ client.on('message', async message => {
 		// Bot management commands
 		case "stop":
 			stop(message, serverQueue, 0);
-			break;
+			return;
 
 		case "disconnect":
 			stop(message, serverQueue, 1);
-			break;
+			return;
 
 		case "skip":
 			skip(message, serverQueue);
-			break;
+			return;
 
 		case "freeze":
-			if (isDev(message.author.id))
+			if (isAdmin(message.author.id))
 				message.channel.send(setBreak(true));
 			else
-				message.channel.send("This command is in the vault, needs dev access");
-			break;
+				message.channel.send("This command need admin access");
+			return;
 
 		case "thaw":
 			if (!isBreak)
@@ -144,32 +133,94 @@ client.on('message', async message => {
 				message.channel.send(setBreak(false));
 			else
 				message.channel.send("This command needs admin access");
-			break;
+			return;
 
-		// Effects CRUD operations
-		case "delete":
+		// Settings CRUD operations:
+		case "togglebotinteraction":
+			if (isAdmin(message.author.id)) {
+				settings.toggle("iba");
+				message.channel.send("External bot interaction is now set to " + settings.get("iba"));
+			} else {
+				message.channel.send("This command needs admin access");
+			}
+			return;
+
+		case "blr":
+		case "toggleblr":
+		case "blacklistretrack":
+		case "blacklistretracks":
+		case "blacklistretrack5":
+			if (isAdmin(message.author.id)) {
+				settings.toggle("blr");
+				message.channel.send("Blocking retrack5 is now set to " + settings.get("blr"));
+			} else {
+				message.channel.send("This command needs admin access");
+			}
+			return;
+			
+		case "togglerv":
+		case "togglereq":
+		case "togglereqv":
+		case "togglereqverbose":
 			if (isOperator(message.author.id)) {
+				settings.toggle("reqverb");
+				message.channel.send("Requestor verbose is now set to " + settings.get("reqverb"));
+			} else {
+				message.channel.send("This command needs operator access");
+			}
+			return;
+
+		case "commits":
+		case "commitsettings":
+			if (isAdmin(message.author.id))
+				message.channel.send(settings.commit());
+			else
+				message.channel.send("This command needs admin access");
+			return;
+
+		case "lists":
+		case "listset":
+		case "listsettings":
+			message.channel.send(settings.getSettings());
+			return;
+		
+
+		// Effects CRUD operations:
+		case "delete":
+			if (isAdmin(message.author.id)) {
 				effects.remove(getWord(words, 2, 1));
 			}
-			break;
+			return;
 
 		case "add":
 			if (isOperator(message.author.id)) {
-				effects.add(getWord(words, 1), getWord(words, 2, true))
+				message.channel.send(
+					effects.add(getWord(words, 1), getWord(words, 2, true))
+				);
 			}
-			break;
+			return;
 
 		case "cache":
 		case "forcecache":
 			if (isOperator(message.author.id)) {
 				message.channel.send(effects.cache(getWord(words, 1), true, command == "forcecache"));
 			}
-			break;
+			return;
+
+		case "cacheall":
+			if (isOperator(message.author.id)) {
+				effects.cacheAllEffects();
+				message.channel.send("Effects cached as audio formats to storage");
+			} else {
+				message.channel.send("This command needs operator access");
+			}
+			return;
 
 		case "commiteffects":
+		case "commite":
 			if (isOperator(message.author.id))
 				message.channel.send(effects.commit());
-			break;
+			return;
 
 		case "get":
 			url = effects.getURL(getWord(words, 1));
@@ -177,9 +228,14 @@ client.on('message', async message => {
 				message.channel.send("The effect isn't on record");
 			else
 				message.channel.send(words[1] + ": <" + url + ">");
-			break;
+			return;
 
-		case "listall":
+		case "numeffects":
+			message.channel.send(effects.getNumEffects() + " effects are currently stored in mem");
+			return;
+
+		case "listeffects":
+		case "liste":
 			message.channel.send(effects.getNames());
 			return;
 
