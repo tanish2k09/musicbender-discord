@@ -26,7 +26,6 @@ function setBreak(freezeStatus) {
 	return "Am woke aha";
 }
 
-// Unhandled guarantee: minWords must at least be 2
 function getWord(words, index, preserveCase = false) {
 	if (words.length <= index)
 		return "0";

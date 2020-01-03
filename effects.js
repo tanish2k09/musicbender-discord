@@ -1,7 +1,7 @@
 /* This file is responsible for handling the effects map
  * and that includes reading, writing, updating and removing any effects.
  *
- * NOTE: Only admins must be able to use REST operations on the effects map.
+ * NOTE: Only admins must be able to use CRUD operations on the effects map.
  */
 const fs = require('fs');
 const ytdl = require('ytdl-core');
