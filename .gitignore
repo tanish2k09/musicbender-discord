@@ -1,6 +1,7 @@
 id.json
 package-lock.json
 auth.json
+*.bk
 
 node_modules/
 vid_cache/
