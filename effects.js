@@ -68,9 +68,39 @@ module.exports = {
 			return name + " successfully cached";
 	},
 
-	cacheAllEffects: function () {
+	cacheAllEffects: function (forced) {
 		for (key in urls) {
-			this.cache(key, false, false);
+			this.cache(key, false, forced);
+		}
+	},
+
+	clearCache: function (name) {
+		fs.unlinkSync('./vid_cache/' + name);
+	},
+
+	clearCacheAll: function () {
+		try {
+			files = fs.readdirSync('./vid_cache');
+			for (i = 0; i < files.length; ++i) {
+				fs.unlinkSync('./vid_cache/' + files[i]);
+			}
+			return "All cache wiped successfully";
+		} catch (err) {
+			console.log(err);
+			return "Something went wrong while clearing cache, log dumped";
+		}
+	},
+
+	refreshCache: function () {
+		try {
+			for (file in fs.readdirSync('./vid_cache')) {
+				if (!urls[file])
+					fs.unlinkSync('./vid_cache/' + file);
+			}
+			return "Cache refresh successful";
+		} catch (err) {
+			console.log(err);
+			return "Something went wrong while refreshing cache, log dumped";
 		}
 	},
 
@@ -99,8 +129,10 @@ module.exports = {
 	},
 
 	remove: function (name) {
-		if (name != "0" && urls[name])
+		if (name != "0" && urls[name]) {
 			urls.delete(name);
+			this.clearCache(name);
+		}
 	},
 
 	add: function (name, url) {
@@ -124,6 +156,18 @@ module.exports = {
 			console.log(err);
 			return "Invalid/Inaccessible URL";
 		}
+	},
+
+	update: function (name, url) {
+		if (name == "0" || url == "0")
+			return "Invalid name or URL";
+
+		if (!urls[name])
+			return "Effect doesn't exist, try using add";
+
+		urls[name] = url;
+		this.clearCache(name);
+		return "Effect URL updated successfully";
 	},
 
 	commit: function () {

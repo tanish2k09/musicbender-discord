@@ -192,6 +192,14 @@ client.on('message', async message => {
 			}
 			return;
 
+		case "update":
+			if (isOperator(message.author.id)) {
+				message.channel.send(
+					effects.update(getWord(words, 1), getWord(words, 2, true))
+				);
+			}
+			return;
+
 		case "add":
 			if (isOperator(message.author.id)) {
 				message.channel.send(
@@ -208,13 +216,29 @@ client.on('message', async message => {
 			return;
 
 		case "cacheall":
+		case "forcecacheall":
 			if (isOperator(message.author.id)) {
-				effects.cacheAllEffects();
+				effects.cacheAllEffects(command == "forcecacheall");
 				message.channel.send("Effects cached as audio formats to storage");
 			} else {
 				message.channel.send("This command needs operator access");
 			}
 			return;
+
+		case "refreshcache":
+			if (isAdmin(message.author.id))
+				message.channel.send(effects.refreshCache());
+			else
+				message.channel.send("This command needs admin access");
+			return;
+
+		case "wipecache":
+			if (isAdmin(message.author.id))
+				message.channel.send(effects.clearCacheAll());
+			else
+				message.channel.send("This command needs admin access");
+			return;
+
 
 		case "commiteffects":
 		case "commite":
