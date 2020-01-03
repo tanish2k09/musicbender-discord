@@ -79,10 +79,10 @@ client.on('message', async message => {
 
 	// Bots aren't allowed to execute commands (by default)
 	// Only admins should be able to modify bot allowance
-	if (message.author.bot && !isBotAllowed)
+	if (message.author.bot && !settings.get("iba"))
 		return;
 
-	if (message.author.id == retracksID && blr)
+	if (message.author.id == retracksID && settings.get("blr"))
 		return;
 
 	// Only respond to the prefix with content
