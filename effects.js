@@ -84,14 +84,18 @@ module.exports = {
 			sortedList[sortedList.length] = name;
 		}
 
-		out = "```";
+		out = "```\n";
 		sortedList.sort();
 
-		for (var i = 0; i < sortedList.length; ++i) {
+		for (i = 0; i < sortedList.length; ++i) {
 			out += sortedList[i] + '\n';
 		}
 
 		return out + "```";
+	},
+
+	getNumEffects: function () {
+		return Object.keys(urls).length;
 	},
 
 	remove: function (name) {
@@ -101,7 +105,10 @@ module.exports = {
 
 	add: function (name, url) {
 		if (name == "0" || url == "0")
-			return;
+			return "Invalid name or URL";
+
+		if (urls[name])
+			return "Effect already exists, use update command to change links";
 
 		try {
 			// Try to fetch ID to see if the video is valid
@@ -111,9 +118,11 @@ module.exports = {
 			console.log("Fetched successfully");
 
 			urls[name] = url;
+			return "Added effect to RAM, use commiteffects to store permanently";
 		} catch (err) {
 			console.log("Fetching failed, dumping error output");
 			console.log(err);
+			return "Invalid/Inaccessible URL";
 		}
 	},
 
@@ -124,7 +133,7 @@ module.exports = {
 			return "Effects committed successfully";
 		} catch (err) {
 			console.log(err);
-			return "Something went wrong while committing changes, flushed log";
+			return "Something went wrong while committing effects, flushed log";
 		}
 	}
 }
