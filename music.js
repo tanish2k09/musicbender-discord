@@ -312,7 +312,6 @@ async function execute(command, url, message, serverQueue) {
 		clearTimeout(timer);
 
 	if (!serverQueue) {
-		console.log("Creating serverQueue...");
 		const queueContruct = {
 			textChannel: message.channel,
 			voiceChannel: voiceChannel,
@@ -327,17 +326,12 @@ async function execute(command, url, message, serverQueue) {
 		serverQueue.songs.push([command, url]);
 		var connection = await voiceChannel.join();
 		serverQueue.connection = connection;
-		console.log("ServerQueue built:", serverQueue.textChannel.guild);
 	} else {
 		serverQueue.songs.push([command, url]);
 		if (!wasIdle)
 			return;
 	}
-
-	// If serverqueue doesn't exist, make one
-	// If serverqueue exists, push the song, the queue will increment itself
-	// If serverqueue exists but bot was idle, push the song and play it
-
+	
 	try {
 		play(message.guild, serverQueue.songs[0]);
 	} catch (err) {
