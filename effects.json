@@ -139,6 +139,26 @@
 		{
 			"id" : "ooh",
 			"url" : "https://youtu.be/0epk4YXus1g"
+		},
+		{
+			"id" : "bye",
+			"url" : "https://www.youtube.com/watch?v=_HBFj-AfWwU"
+		},
+		{
+			"id" : "spaghetearrape",
+			"url" : "<https://www.youtube.com/watch?v=NSfTdAvLspg&list=WL>"
+		},
+		{
+			"id" : "fastafboi",
+			"url" : "https://www.youtube.com/watch?v=Lz5ETBTckRU"
+		},
+		{
+			"id" : "hellothere",
+			"url" : "https://www.youtube.com/watch?v=XW9CTjghV5c"
+		},
+		{
+			"id" : "howrya",
+			"url" : "https://www.youtube.com/watch?v=YKWRzmUVHHU"
 		}
 	]
 }
