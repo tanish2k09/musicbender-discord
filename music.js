@@ -17,6 +17,8 @@ const client = new Discord.Client();
 
 var isBreak = false;
 var effectsChannel;
+var timer = null;
+var wasIdle = false;
 
 function setBreak(freezeStatus) {
 	isBreak = freezeStatus;
@@ -107,11 +109,13 @@ client.on('message', async message => {
 	switch (command) {
 		// Bot management commands
 		case "stop":
-			stop(message, serverQueue, 0);
+			if (isOperator(message.author.id))
+				stop(message, serverQueue, false);
 			return;
 
 		case "disconnect":
-			stop(message, serverQueue, 1);
+			if (isAdmin(message.author.id))
+				disconnect(serverQueue, true);
 			return;
 
 		case "skip":
@@ -166,6 +170,18 @@ client.on('message', async message => {
 				message.channel.send("Requestor verbose is now set to " + settings.get("reqverb"));
 			} else {
 				message.channel.send("This command needs operator access");
+			}
+			return;
+
+		case "settimeout":
+		case "timer":
+		case "timeout":
+		case "idle":
+			if (isDev(message.author.id)) {
+				settings.set("timeout", getWord(words, 1));
+				message.channel.send("Idle timeout is now set to " + settings.get("timeout"));
+			} else {
+				message.channel.send("This command needs dev access");
 			}
 			return;
 
@@ -292,7 +308,11 @@ async function execute(command, url, message, serverQueue) {
 	if (settings.get("reqverb"))
 		effectsChannel.send(message.content.substr(1, message.content.len) + ` requested by ` + message.author.id);
 
+	if (timer)
+		clearTimeout(timer);
+
 	if (!serverQueue) {
+		console.log("Creating serverQueue...");
 		const queueContruct = {
 			textChannel: message.channel,
 			voiceChannel: voiceChannel,
@@ -303,23 +323,28 @@ async function execute(command, url, message, serverQueue) {
 		};
 
 		queue.set(message.guild.id, queueContruct);
-
-		queueContruct.songs.push([command, url]);
-
-		try {
-			var connection = await voiceChannel.join();
-			queueContruct.connection = connection;
-			play(message.guild, queueContruct.songs[0]);
-		} catch (err) {
-			console.log(err);
-			queue.delete(message.guild.id);
-			return;
-		}
+		serverQueue = queue.get(message.guild.id);
+		serverQueue.songs.push([command, url]);
+		var connection = await voiceChannel.join();
+		serverQueue.connection = connection;
+		console.log("ServerQueue built:", serverQueue.textChannel.guild);
 	} else {
 		serverQueue.songs.push([command, url]);
-		return;
+		if (!wasIdle)
+			return;
 	}
 
+	// If serverqueue doesn't exist, make one
+	// If serverqueue exists, push the song, the queue will increment itself
+	// If serverqueue exists but bot was idle, push the song and play it
+
+	try {
+		play(message.guild, serverQueue.songs[0]);
+	} catch (err) {
+		console.log(err);
+		queue.delete(message.guild.id);
+		return;
+	}
 }
 
 function skip(message, serverQueue) {
@@ -332,11 +357,19 @@ function stop(message, serverQueue, shouldDisconnect) {
 	if (!message.member.voiceChannel && !isAdmin(message.author.id))
 		return message.channel.send('You have to be in a voice channel to stop the music!');
 
-	serverQueue.songs = [];
-	serverQueue.connection.dispatcher.end();
+	disconnect(serverQueue, shouldDisconnect);
+}
 
-	if (shouldDisconnect) {
+function disconnect(serverQueue, shouldExit) {
+	if (!serverQueue)
+		return;
+
+	serverQueue.songs = [];
+	wasIdle = false;
+
+	if (shouldExit && serverQueue.voiceChannel) {
 		serverQueue.voiceChannel.leave();
+		queue.delete(serverQueue.textChannel.guild.id);
 	}
 }
 
@@ -344,8 +377,8 @@ function play(guild, song) {
 	const serverQueue = queue.get(guild.id);
 
 	if (!song) {
-		serverQueue.voiceChannel.leave();
-		queue.delete(guild.id);
+		wasIdle = true;
+		timer = setTimeout(disconnect, parseInt(settings.get("timeout"), 10) * 1000, serverQueue, true);
 		return;
 	}
 

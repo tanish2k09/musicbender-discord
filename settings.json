@@ -11,6 +11,10 @@
 		{
 			"key" : "reqverb",
 			"val" : "true"
+		},
+		{
+			"key" : "timeout",
+			"val" : "10"
 		}
 	]
 }
