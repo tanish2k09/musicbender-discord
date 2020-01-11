@@ -15,6 +15,14 @@
 		{
 			"key" : "timeout",
 			"val" : "300"
+		},
+		{
+			"key" : "hmh",
+			"val" : "true"
+		},
+		{
+			"key" : "hp",
+			"val" : "h?"
 		}
 	]
 }

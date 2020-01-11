@@ -1,9 +1,11 @@
-/* This file is responsible for handling the effects map
- * and that includes reading, writing, updating and removing any effects.
+/* This file is responsible for handling the settings map
+ * and that includes reading, writing, updating and removing any settings.
  *
- * NOTE: Only admins must be able to use REST operations on the effects map.
+ * NOTE: Only admins must be able to use CRUD operations on the settings map.
  */
 const fs = require('fs');
+
+const jsonPath = "./JSON/";
 
 var settings = {};
 
@@ -25,7 +27,7 @@ function stringify() {
 module.exports = {
 	
 	readSettingsFromFile: function () {
-		settingsList = JSON.parse(fs.readFileSync('./settings.json'));
+		settingsList = JSON.parse(fs.readFileSync(jsonPath + 'settings.json'));
 		for (var i = 0; i < settingsList.configs.length; ++i) {
 			setting = settingsList.configs[i];
 			settings[setting.key] = setting.val;
@@ -62,8 +64,8 @@ module.exports = {
 
 	commit: function () {
 		try {
-			fs.renameSync('./settings.json', './settings.json.bk');
-			fs.writeFileSync('./settings.json', stringify());
+			fs.renameSync(jsonPath + 'settings.json', jsonPath + 'settings.json.bk');
+			fs.writeFileSync(jsonPath + 'settings.json', stringify());
 			return "Settings committed successfully";
 		} catch (err) {
 			console.log(err);

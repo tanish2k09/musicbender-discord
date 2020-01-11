@@ -1,6 +1,6 @@
-id.json
+JSON/id.json
 package-lock.json
-auth.json
+JSON/auth.json
 *.bk
 
 node_modules/

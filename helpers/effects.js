@@ -6,6 +6,9 @@
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 
+const vid_cache = "./vid_cache/";
+const jsonPath = "./JSON/";
+
 var urls = {};
 
 function stringify() {
@@ -26,7 +29,7 @@ function stringify() {
 module.exports = {
 
 	readEffectsFromFile: function () {
-		effectsList = JSON.parse(fs.readFileSync('./effects.json'));
+		effectsList = JSON.parse(fs.readFileSync(jsonPath + 'effects.json'));
 		for (var i = 0; i < effectsList.effects.length; ++i) {
 			effect = effectsList.effects[i];
 			urls[effect.id] =  effect.url;
@@ -40,7 +43,7 @@ module.exports = {
 			return;
 		}
 
-		return fs.existsSync("./vid_cache/" + name);
+		return fs.existsSync(vid_cache + name);
 	},
 
 	cache: function (name, verbose, force) {
@@ -59,7 +62,7 @@ module.exports = {
 		console.log("Downloading effect: " + key);
 
 		ytdl(urls[key], {quality: 'lowestaudio'}).pipe(
-			fs.createWriteStream("./vid_cache/" + name)
+			fs.createWriteStream(vid_cache + name)
 		);
 
 		console.log("Downloaded...\n");
@@ -75,14 +78,14 @@ module.exports = {
 	},
 
 	clearCache: function (name) {
-		fs.unlinkSync('./vid_cache/' + name);
+		fs.unlinkSync(vid_cache + name);
 	},
 
 	clearCacheAll: function () {
 		try {
-			files = fs.readdirSync('./vid_cache');
+			files = fs.readdirSync(vid_cache);
 			for (i = 0; i < files.length; ++i) {
-				fs.unlinkSync('./vid_cache/' + files[i]);
+				fs.unlinkSync(vid_cache + files[i]);
 			}
 			return "All cache wiped successfully";
 		} catch (err) {
@@ -93,9 +96,9 @@ module.exports = {
 
 	refreshCache: function () {
 		try {
-			for (file in fs.readdirSync('./vid_cache')) {
+			for (file in fs.readdirSync(vid_cache)) {
 				if (!urls[file])
-					fs.unlinkSync('./vid_cache/' + file);
+					fs.unlinkSync(vid_cache + file);
 			}
 			return "Cache refresh successful";
 		} catch (err) {
@@ -172,8 +175,8 @@ module.exports = {
 
 	commit: function () {
 		try {
-			fs.renameSync('./effects.json', './effects.json.bk');
-			fs.writeFileSync('./effects.json', stringify());
+			fs.renameSync(jsonPath + 'effects.json', jsonPath + 'effects.json.bk');
+			fs.writeFileSync(jsonPath + 'effects.json', stringify());
 			return "Effects committed successfully";
 		} catch (err) {
 			console.log(err);
