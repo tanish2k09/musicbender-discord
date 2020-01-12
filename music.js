@@ -57,7 +57,7 @@ function isOperator(userID) {
 }
 
 function isHydraChannel(channelID) {
-	return channelID == ids.hydraChannelID;
+	return channelID == ids.hydraChannel;
 }
 
 function generateShutdownKey(len) {
@@ -111,19 +111,20 @@ client.on('message', async message => {
 	if (message.author.bot && !settings.get("iba"))
 		return;
 
-	if (message.author.id == retracksID && settings.get("blr"))
-		return;
-
 	// Only respond to the prefix with content
 	// Unless hydra history setting is enabled, which doesn't require a prefix
 	if (!message.content.startsWith(prefix) && message.content.length > 1) {
 		if (isHydraChannel(message.channel.id) &&
 			settings.get("hmh") &&
-			!message.content.startsWith(settings.get("hp"))
-		)
+			(!message.content.startsWith(settings.get("hp") ||
+			message.content.startsWith(settings.get("hp" + "play"))
+			)))
 			historyChannel.send(message.content);
 		return;
 	}
+
+	if (message.author.id == retracksID && settings.get("blr"))
+		return;
 
 	/*
 	 * 1) Strip the ? prefix from the message
@@ -144,6 +145,10 @@ client.on('message', async message => {
 		case "clear":
 			if (isOperator(message.author.id))
 				queue = [];
+			return;
+
+		case "ping":
+			message.channel.send("Yep, I'm right here sarge");
 			return;
 
 		case "shutdown":
@@ -260,18 +265,6 @@ client.on('message', async message => {
 				message.channel.send("Hydra history is now set to " + settings.get("hmh"));
 			} else {
 				message.channel.send("This command needs operator access");
-			}
-			return;
-
-		case "hp":
-		case "hydraprefix":
-		case "hydrap":
-		case "hprefix":
-			if (isAdmin(message.author.id)) {
-				settings.set("hp", getWord(words, 1))
-				message.channel.send("Hydra history is now set to " + settings.get("hp"));
-			} else {
-				message.channel.send("This command needs admin access");
 			}
 			return;
 
