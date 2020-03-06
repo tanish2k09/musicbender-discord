@@ -9,10 +9,6 @@ namespace Musicbender.Handlers
   {
     public static async Task Execute(DSharpPlus.Entities.DiscordMessage message)
     {
-      // TODO: Enforce some basic checks before doing anything
-      if (!EnforcementHandler.EnforceInitial(message))
-        return;
-
       /* Execute is a generic method to streamline all perm types.
        * Choose the proper method to use
        * Use the user perms to trigger a method instead of triggering a method and checking perms
