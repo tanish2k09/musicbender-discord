@@ -22,8 +22,10 @@ namespace Musicbender.Helpers.Commands
     {
       {"addeffect", "addeffect" },
       {"alias", "alias" },
+      {"clear", "clear" },
       {"listeffects", "listeffects" },
-      {"listsettings", "listsettings" }
+      {"listsettings", "listsettings" },
+      {"shutdown", "shutdown" }
     };
 
     /* GetActualCommand logic:

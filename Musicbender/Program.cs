@@ -5,6 +5,7 @@ using Musicbender.Data;
 using Musicbender.Handlers;
 using Musicbender.Helpers.Security;
 using DSharpPlus;
+using DSharpPlus.VoiceNext;
 
 namespace Musicbender
 {
@@ -26,19 +27,23 @@ namespace Musicbender
       {
         Token = CredentialsKeeper.Token,
         TokenType = TokenType.Bot
-      });
+      }
+      );
+
+      await discord.UseVoiceNextAsync(new VoiceNextConfiguration());
 
       CredentialsKeeper.WipeToken();
 
       discord.MessageCreated += async e =>
       {
         if (e.Message.Content.StartsWith(CredentialsKeeper.Prefix))
-          await MessageEventHandler.HandleCreation(e.Message);
+          await MessageEventHandler.HandleCreation(e);
       };
 
       await discord.StartAsync();
 
       Console.WriteLine(Strings.Ready);
+
       await Task.Delay(-1);
     }
   }

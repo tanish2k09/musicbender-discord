@@ -1,4 +1,4 @@
-﻿using System;
+﻿using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
 
 namespace Musicbender.Handlers
@@ -7,13 +7,13 @@ namespace Musicbender.Handlers
 	{
 		public MessageEventHandler() { }
 
-		public static async Task HandleCreation(DSharpPlus.Entities.DiscordMessage message)
+		public static async Task HandleCreation(MessageCreateEventArgs e)
 		{
 			// TODO: Enforce some basic checks before doing anything
-			if (!EnforcementHandler.EnforceInitial(message))
+			if (!EnforcementHandler.EnforceInitial(e.Message))
 				return;
 
-			await CommandHandler.Execute(message);
+			await CommandHandler.Execute(e);
 		}
 	}
 }

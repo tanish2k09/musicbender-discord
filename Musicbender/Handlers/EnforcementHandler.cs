@@ -18,18 +18,17 @@ namespace Musicbender.Handlers
       return true;
     }
 
-    public static async Task<bool> EnforceVoice(DSharpPlus.Entities.DiscordMessage message)
+    public static async Task<DiscordChannel> EnforceVoice(DSharpPlus.Entities.DiscordMessage message)
     {
       try
       {
         DiscordMember member = (await message.Channel.Guild.GetMemberAsync(message.Author.Id));
-        return member.VoiceState.Channel != null;
+        return member.VoiceState.Channel;
       } catch (Exception e)
       {
         Console.WriteLine(e.StackTrace);
-        return false;
+        return null;
       }
-      
     }
   }
 }

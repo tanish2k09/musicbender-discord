@@ -1,4 +1,5 @@
-﻿using Musicbender.Data;
+﻿using DSharpPlus.EventArgs;
+using Musicbender.Data;
 using Musicbender.Helpers.Commands;
 using Musicbender.Helpers.Security;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace Musicbender.Handlers
 {
   class CommandHandler
   {
-    public static async Task Execute(DSharpPlus.Entities.DiscordMessage message)
+    public static async Task Execute(MessageCreateEventArgs e)
     {
       /* Execute is a generic method to streamline all perm types.
        * Choose the proper method to use
@@ -17,119 +18,91 @@ namespace Musicbender.Handlers
        * NOTE: Execute functions cascade down the permissions ladder until a command hit is found
        */
 
-      string command = ArgumentRenderer.Command(message.Content);
+      string command = ArgumentRenderer.Command(e.Message.Content);
       command = CommandStore.GetActualCommand(command);
 
-      if (CredentialsKeeper.IsDev(message.Author.Id))
-        await ExecuteDev(message, command);
-      else if (CredentialsKeeper.IsAdmin(message.Author.Id))
-        await ExecuteAdmin(message, command);
-      else if (CredentialsKeeper.IsOperator(message.Author.Id))
-        await ExecuteOperator(message, command);
+      if (CredentialsKeeper.IsDev(e.Author.Id))
+        await ExecuteDev(e, command);
+      else if (CredentialsKeeper.IsAdmin(e.Message.Author.Id))
+        await ExecuteAdmin(e, command);
+      else if (CredentialsKeeper.IsOperator(e.Message.Author.Id))
+        await ExecuteOperator(e, command);
       else
-        await ExecutePublic(message, command);
+        await ExecutePublic(e, command);
     }
 
     /* All commands executable by the developers only will be listed here */
-    private static async Task ExecuteDev(DSharpPlus.Entities.DiscordMessage message, string command)
+    private static async Task ExecuteDev(MessageCreateEventArgs e, string command)
     {
       switch(command)
       {
+        case "shutdown":
+          await CommandExecutionHelper.Shutdown();
+          break;
         default:
-          await ExecuteAdmin(message, command);
+          await ExecuteAdmin(e, command);
           break;
       }
     }
 
     /* All commands executable by admins will be listed here */
-    private static async Task ExecuteAdmin(DSharpPlus.Entities.DiscordMessage message, string command)
+    private static async Task ExecuteAdmin(MessageCreateEventArgs e, string command)
     {
       switch (command)
       {
         case "alias":
-          await SetupAlias(message);
+          await CommandExecutionHelper.SetupAlias(e.Message);
           break;
 
         default:
-          await ExecuteOperator(message, command);
+          await ExecuteOperator(e, command);
           break;
       }
     }
 
     /* All commands executable by operators will be listed here */
-    private static async Task ExecuteOperator(DSharpPlus.Entities.DiscordMessage message, string command)
+    private static async Task ExecuteOperator(MessageCreateEventArgs e, string command)
     {
       switch (command)
       {
         // TODO: Communicate with youtube URL parser and the DB
         case "addeffect":
-          await Reply(message, Strings.NotMuch);
+          await CommandExecutionHelper.Reply(e.Message, Strings.NotMuch);
           break;
 
         // TODO: Settings include timeout, blacklist and whitelist
         // TODO: Settings are guild-specific
         case "listsettings":
-          await Reply(message, Strings.NotMuch);
+          await CommandExecutionHelper.Reply(e.Message, Strings.NotMuch);
+          break;
+
+        case "clear":
+          await EffectHandler.Clear(e);
           break;
 
         default:
           if (command.StartsWith(Strings.EffectPrefix))
-            await Reply(
-              message,
-              await EffectHandler.Execute(
-                message,
-                ArgumentRenderer.Effect(command)
-                )
-              );
+            await CommandExecutionHelper.TryEffect(e, command);
           else
-            await ExecutePublic(message, command);
+            await ExecutePublic(e, command);
           break;
       }
     }
 
-    private static async Task ExecutePublic(DSharpPlus.Entities.DiscordMessage message, string command)
+    private static async Task ExecutePublic(MessageCreateEventArgs e, string command)
     {
       switch (command)
       {
         // TODO: Make List methods have paginated response with reactions
         // TODO: Effects are guild-specific
         case "listeffects":
-          await Reply(message, await EffectHandler.ListEffects(message.Channel.GuildId));
+          await CommandExecutionHelper.ListEffects(e.Message);
           break;
 
         default:
-          await Reply(message, Strings.Noop);
+          await CommandExecutionHelper.Reply(e.Message, Strings.Noop);
           break;
       }
-    }
-
-    public static async Task Reply(DSharpPlus.Entities.DiscordMessage message, string response)
-    {
-      if (response.Length > 0)
-        await message.RespondAsync(response);
-    }
-
-    // TODO: Setup aliases with the database
-    private static async Task SetupAlias(DSharpPlus.Entities.DiscordMessage message)
-    {
-      // Make sure there are exactly 2 parts, an alias and the command.
-      if (
-        (await ArgumentRenderer.Split(message.Content, " as "))
-        .Length != 2)
-      {
-        await Reply(message, Strings.WrongSyntax);
-        return;
-      }
-
-      // The first part also contains "<prefix><alias>" word, strip that
-      string[] parts = await ArgumentRenderer.Split(message.Content, " ");
-      if (parts.Length != 4)
-      {
-        await Reply(message, Strings.WordsNotSentences);
-        return;
-      }
-
-      await Reply(message, await CommandStore.Link(parts[1], parts[3]));
     }
   }
 }
