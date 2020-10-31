@@ -16,9 +16,6 @@ const client = new Discord.Client();
 const alphaNum = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 var isBreak = false;
-var effectsChannel;
-var historyChannel;
-var devChannel;
 var timer = null;
 var wasIdle = true;
 var shutdownKey = null;
@@ -56,13 +53,9 @@ function isOperator(userID) {
 	return (isAdmin(userID) || userID == bebeID);
 }
 
-function isHydraChannel(channelID) {
-	return channelID == ids.hydraChannel;
-}
-
 function generateShutdownKey(len) {
 	var key = '';
-	for ( var i = 0; i < 62; i++ ) {
+	for (var i = 0; i < 62; i++) {
 		key += alphaNum.charAt(Math.floor(Math.random() * 62));
 	}
 	return key;
@@ -76,13 +69,9 @@ function setShutdownKey(create) {
 }
 
 client.once('ready', () => {
-	effectsChannel = client.channels.get(ids.effectsChannel);
-	historyChannel = client.channels.get(ids.historyChannel);
-	devChannel = client.channels.get(ids.devChannel);
 	effects.readEffectsFromFile();
 	effects.cacheAllEffects();
 	settings.readSettingsFromFile();
-	devChannel.send("Rebooted and resuited!");
 	console.log('Ready!');
 });
 
@@ -111,20 +100,12 @@ client.on('message', async message => {
 	if (message.author.bot && !settings.get("iba"))
 		return;
 
-	// Only respond to the prefix with content
-	// Unless hydra history setting is enabled, which doesn't require a prefix
-	if (!message.content.startsWith(prefix) && message.content.length > 1) {
-		if (isHydraChannel(message.channel.id) &&
-			settings.get("hmh") &&
-			(!message.content.startsWith(settings.get("hp") ||
-			message.content.startsWith(settings.get("hp" + "play"))
-			)))
-			historyChannel.send(message.content);
-		return;
-	}
-
 	if (message.author.id == retracksID && settings.get("blr"))
 		return;
+
+	if (!message.content.startsWith(prefix)) {
+		return;
+	}
 
 	/*
 	 * 1) Strip the ? prefix from the message
@@ -134,9 +115,9 @@ client.on('message', async message => {
 	 * 5) Convert to lowercase and assign as command
 	 */
 	words = message.content
-			.substr(1, message.content.length)
-			.replace(/\s+/g, " ")
-			.split(' ');
+		.substr(prefix.length, message.content.length)
+		.replace(/\s+/g, " ")
+		.split(' ');
 
 	command = words[0].toLowerCase();
 
@@ -152,7 +133,7 @@ client.on('message', async message => {
 			return;
 
 		case "shutdown":
-			if(isDev(message.author.id)) {
+			if (isDev(message.author.id)) {
 				setShutdownKey(true);
 				message.channel.send("Shutdown initiated, keygen built ||" + shutdownKey + "||");
 			} else {
@@ -253,18 +234,6 @@ client.on('message', async message => {
 				message.channel.send("Idle timeout is now set to " + settings.get("timeout"));
 			} else {
 				message.channel.send("This command needs dev access");
-			}
-			return;
-
-		case "hmh":
-		case "togglehmh":
-		case "togglehistory":
-		case "hydrahistory":
-			if (isOperator(message.author.id)) {
-				settings.set("hmh", getWord(words, 1))
-				message.channel.send("Hydra history is now set to " + settings.get("hmh"));
-			} else {
-				message.channel.send("This command needs operator access");
 			}
 			return;
 
@@ -402,7 +371,7 @@ function handlePlay(voiceChannel) {
 
 function execute(command, url, message) {
 	legalTimeout = true;
-	const voiceChannel = message.member.voiceChannel;
+	const voiceChannel = message.member.voice.channel;
 
 	if (!voiceChannel)
 		return message.author.send('You need to be in a voice channel to play music!');
@@ -415,9 +384,6 @@ function execute(command, url, message) {
 
 	if (timer)
 		clearTimeout(timer);
-
-	if (settings.get("reqverb"))
-		effectsChannel.send(message.content.substr(1, message.content.len) + ` requested by ` + message.author.id);
 
 	/* We can use the length of the queue to know the status of playback
 	 * First we'd wanna check the idle status
@@ -493,16 +459,16 @@ async function play(voiceChannel, song) {
 		stream = fs.createReadStream("./vid_cache/" + song[0]);
 	} else {
 		console.log("Got a cache miss on effect: ", song[0]);
-		stream = ytdl(song[1], {quality: 'lowest'});
+		stream = ytdl(song[1], { quality: 'lowest' });
 	}
 
 	console.log("Dispatching...");
-	dispatcher = connection.playStream(stream)
-	.on('end', () => {
+	dispatcher = connection.play(stream)
+		.on('end', () => {
 			console.log('Effect ended...');
 			play(voiceChannel, queue.shift());
 		})
-	.on('error', error => {
+		.on('error', error => {
 			console.error(error);
 			stream.close();
 		});
